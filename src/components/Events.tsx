@@ -3,8 +3,13 @@ import { chapter } from '../data/site'
 import { events, type ChapterEvent } from '../data/events'
 import { gsap, reducedMotion } from '../lib/motion'
 
+type ScheduledEvent = ChapterEvent & { start: string; end: string }
+
+const hasSchedule = (event: ChapterEvent): event is ScheduledEvent =>
+  Boolean(event.start && event.end)
+
 const toIcs = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
-function downloadIcs(e: ChapterEvent) {
+function downloadIcs(e: ScheduledEvent) {
   const esc = (s: string) => s.replace(/([,;\\])/g, '\\$1')
   const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//IEEE TEMS SRM//Events//EN', 'BEGIN:VEVENT', `UID:${e.id}@ieeetems-srm`,
     `DTSTAMP:${toIcs(new Date().toISOString())}`, `DTSTART:${toIcs(e.start)}`, `DTEND:${toIcs(e.end)}`, `SUMMARY:${esc(e.title)}`,
@@ -41,8 +46,12 @@ export function Events() {
   const root = useRef<HTMLElement>(null)
   const track = useRef<HTMLDivElement>(null)
   const now = Date.now()
-  const upcoming = events.filter((e) => +new Date(e.start) > now).sort((a, b) => +new Date(a.start) - +new Date(b.start))[0]
-  const past = events.filter((e) => +new Date(e.end) <= now).sort((a, b) => +new Date(a.start) - +new Date(b.start))
+  const upcoming = events.filter(hasSchedule).filter((e) => +new Date(e.start) > now).sort((a, b) => +new Date(a.start) - +new Date(b.start))[0]
+  const past = events.filter((e) => !hasSchedule(e) || +new Date(e.end) <= now).sort((a, b) => {
+    const aStart = a.start ? +new Date(a.start) : Number.POSITIVE_INFINITY
+    const bStart = b.start ? +new Date(b.start) : Number.POSITIVE_INFINITY
+    return aStart - bStart
+  })
 
   useLayoutEffect(() => {
     const el = root.current
@@ -78,14 +87,27 @@ export function Events() {
         </div>
 
         {past.map((e) => {
-          const d = short(e.start)
+          const d = e.start ? short(e.start) : undefined
+          const isTechForGood = e.id === 'ieee-tech-for-good'
           return (
-            <article className="ev" key={e.id} aria-labelledby={`ev-${e.id}`}>
-              <p className="ev__num" aria-hidden="true">{d.m}<br />’{d.y}</p>
+            <article className={`ev${isTechForGood ? ' ev--conference' : ''}`} key={e.id} aria-labelledby={`ev-${e.id}`}>
+              <p className="ev__num" aria-hidden="true">
+                {d ? <>{d.m}<br />’{d.y}</> : isTechForGood ? <>Tech<br />for<br />Good</> : <>IEEE<br />TEMS</>}
+              </p>
               <div className="ev__body">
-                <p className="ev__date">{e.dateLabel}, {e.location}</p>
+                <p className="ev__date">{isTechForGood ? e.dateLabel : `${e.dateLabel}, ${e.location}`}</p>
+                {isTechForGood && (
+                  <p className="ev__organizer">Hosted at {e.location}</p>
+                )}
                 <h3 id={`ev-${e.id}`}>{e.title}</h3>
                 <p>{e.summary}</p>
+                {e.images && (
+                  <div className={`ev__images ev__images--${e.images.length}`}>
+                    {e.images.map((image) => (
+                      <img key={image.src} src={image.src} alt={image.alt} loading="lazy" />
+                    ))}
+                  </div>
+                )}
                 {e.segments && (
                   <ul className="ev__segs">
                     {e.segments.map((s) => (

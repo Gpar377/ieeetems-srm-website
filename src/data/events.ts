@@ -5,16 +5,31 @@
 export type ChapterEvent = {
   id: string
   title: string
-  start: string // e.g. '2026-02-05T10:00:00+05:30'
-  end: string
+  start?: string // e.g. '2026-02-05T10:00:00+05:30'
+  end?: string
   dateLabel: string
   location: string
   summary: string
+  images?: { src: string; alt: string }[]
   segments?: { name: string; what: string }[]
   registerUrl?: string
 }
 
 export const events: ChapterEvent[] = [
+  {
+    id: 'ieee-tech-for-good',
+    title: 'IEEE Tech for Good',
+    dateLabel: 'Conference',
+    location: 'Sri Sairam Engineering College',
+    summary:
+      'A professional technology conference exploring how engineering and innovation can harness technology to create meaningful, positive impact for society.',
+    images: [
+      {
+        src: '/events/ieee-tech-for-good.png',
+        alt: 'Attendees at an IEEE conference event',
+      },
+    ],
+  },
   {
     id: 'ieeextreme-20',
     title: 'IEEEXtreme 20.0',
@@ -41,6 +56,16 @@ export const events: ChapterEvent[] = [
     location: 'SRM IST, Kattankulathur',
     summary:
       'A two-day program where teams find a real problem, build a startup idea around it and turn it into a structured pitch deck.',
+    images: [
+      {
+        src: '/events/pitch-perfect-2-team.png',
+        alt: 'Attendees gathered at Pitch Perfect 2.0',
+      },
+      {
+        src: '/events/pitch-perfect-2-group.png',
+        alt: 'Pitch Perfect 2.0 participants posing together',
+      },
+    ],
     segments: [
       { name: 'Numbers That Speak', what: 'Market sizing you can defend' },
       { name: 'Money Talks', what: 'Unit economics and how founders get paid' },
@@ -58,5 +83,15 @@ export const events: ChapterEvent[] = [
     location: 'SRM IST, Kattankulathur',
     summary:
       'The first edition: expert talks, team-built pitch decks and mentoring from young professionals, built around validating before building.',
+    images: [
+      {
+        src: '/events/pitch-perfect-1.png',
+        alt: 'Attendees gathered at Pitch Perfect 1.0',
+      },
+      {
+        src: '/events/pitch-perfect-2.png',
+        alt: 'Pitch Perfect 1.0 participants posing with their awards',
+      },
+    ],
   },
 ]
